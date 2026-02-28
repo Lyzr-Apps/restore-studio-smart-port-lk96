@@ -190,17 +190,17 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     setProgressVal(10)
 
     const activePresets: string[] = []
-    let promptMsg = 'Please analyze and restore this uploaded photo. Create a crystal-clear, high-definition 8K restored version preserving the subject\'s identity, pose, expression, and composition. Fix any blur, noise, fading, or damage.'
+    let promptMsg = 'Analyze this uploaded photo and restore it. CRITICAL: You MUST reproduce the EXACT same scene, people, poses, background, and every visual element. Do NOT reimagine or create a new scene. Only enhance the technical quality -- improve sharpness, reduce noise, fix color fading, increase resolution to 8K clarity. The output must look like the same photograph taken with a better camera, nothing else.'
     if (sharpness) {
-      promptMsg += ' Apply enhanced sharpness and fine detail recovery.'
+      promptMsg += ' Apply extra sharpness enhancement and fine detail recovery while keeping the scene identical.'
       activePresets.push('Sharpness Boost')
     }
     if (lighting) {
-      promptMsg += ' Optimize lighting balance and exposure.'
+      promptMsg += ' Optimize lighting balance and exposure correction while keeping the scene identical.'
       activePresets.push('Lighting Balance')
     }
     if (portrait) {
-      promptMsg += ' Apply portrait enhancement with skin smoothing and facial detail preservation.'
+      promptMsg += ' Apply subtle portrait enhancement with natural skin detail preservation while keeping the subject exactly the same.'
       activePresets.push('Portrait Enhance')
     }
 
