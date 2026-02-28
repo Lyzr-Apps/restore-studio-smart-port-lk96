@@ -7,70 +7,16 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
 import { FiSearch, FiDownload, FiTrash2, FiCalendar, FiArrowUp, FiArrowDown } from 'react-icons/fi'
 import { HiOutlinePhoto } from 'react-icons/hi2'
 
 import type { RestorationEntry } from './RestorationWorkspace'
+import { BeforeAfterSlider } from './RestorationWorkspace'
 
 interface HistoryGalleryProps {
   history: RestorationEntry[]
   onDeleteEntry: (id: string) => void
   sampleMode: boolean
-}
-
-// Before/After Slider (reusable)
-function BeforeAfterSlider({ beforeSrc, afterSrc }: { beforeSrc: string; afterSrc: string }) {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [position, setPosition] = useState(50)
-  const isDragging = React.useRef(false)
-
-  const handleMove = React.useCallback((clientX: number) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = clientX - rect.left
-    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
-    setPosition(pct)
-  }, [])
-
-  const handleMouseDown = React.useCallback(() => { isDragging.current = true }, [])
-
-  React.useEffect(() => {
-    const onMove = (e: MouseEvent) => { if (isDragging.current) handleMove(e.clientX) }
-    const onUp = () => { isDragging.current = false }
-    const onTouchMove = (e: TouchEvent) => { if (isDragging.current && e.touches[0]) handleMove(e.touches[0].clientX) }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    window.addEventListener('touchmove', onTouchMove)
-    window.addEventListener('touchend', onUp)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-      window.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onUp)
-    }
-  }, [handleMove])
-
-  return (
-    <div
-      ref={containerRef}
-      className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-border select-none cursor-col-resize"
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleMouseDown}
-    >
-      <img src={afterSrc} alt="Restored" className="absolute inset-0 w-full h-full object-contain bg-black" draggable={false} />
-      <div className="absolute inset-0 overflow-hidden" style={{ width: `${position}%` }}>
-        <img src={beforeSrc} alt="Original" className="absolute inset-0 w-full h-full object-contain bg-black" style={{ minWidth: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100%' }} draggable={false} />
-      </div>
-      <div className="absolute top-0 bottom-0 w-0.5 bg-white/80 z-10" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border-2 border-white flex items-center justify-center shadow-lg">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 3L2 8L5 13" stroke="#171717" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 3L14 8L11 13" stroke="#171717" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </div>
-      </div>
-      <span className="absolute top-3 left-3 z-20 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm">Before</span>
-      <span className="absolute top-3 right-3 z-20 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm">After</span>
-    </div>
-  )
 }
 
 export default function HistoryGallery({ history, onDeleteEntry, sampleMode }: HistoryGalleryProps) {

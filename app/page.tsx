@@ -96,13 +96,14 @@ export default function Page() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen flex bg-background text-foreground font-sans">
+      <div className="min-h-screen flex bg-background text-foreground font-sans" style={{ position: 'relative', zIndex: 0 }}>
         {/* Sidebar */}
         <aside
           className={cn(
             'flex flex-col border-r border-[#1f1f1f] bg-[#0d0d0d] transition-all duration-200 flex-shrink-0',
             sidebarOpen ? 'w-56' : 'w-14'
           )}
+          style={{ position: 'relative', zIndex: 10 }}
         >
           {/* Top: Logo + Collapse */}
           <div className="flex items-center justify-between p-3 border-b border-[#1f1f1f]">
@@ -112,6 +113,7 @@ export default function Page() {
               </span>
             )}
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
@@ -124,6 +126,7 @@ export default function Page() {
           <nav className="flex-1 p-2 space-y-1">
             {navItems.map((item) => (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => setScreen(item.id)}
                 className={cn(
@@ -179,6 +182,7 @@ export default function Page() {
           {/* Top bar (mobile) */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-border md:hidden">
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground"
             >

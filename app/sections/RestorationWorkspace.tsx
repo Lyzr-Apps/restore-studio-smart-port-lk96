@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
-import { FiUploadCloud, FiDownload, FiImage, FiCheck, FiAlertCircle } from 'react-icons/fi'
+import { FiUploadCloud, FiDownload, FiImage, FiCheck, FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import { HiOutlineSparkles, HiOutlineSun, HiOutlineUser } from 'react-icons/hi2'
 
 const AGENT_ID = '69a29056b465805dc60ec95b'
@@ -24,6 +24,7 @@ export interface RestorationEntry {
   analysis: string
   date: string
   presets: string[]
+  aspectRatio?: string
 }
 
 interface RestorationWorkspaceProps {
@@ -32,65 +33,87 @@ interface RestorationWorkspaceProps {
 }
 
 // --- Before/After Slider ---
-function BeforeAfterSlider({ beforeSrc, afterSrc }: { beforeSrc: string; afterSrc: string }) {
+export function BeforeAfterSlider({ beforeSrc, afterSrc }: { beforeSrc: string; afterSrc: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(50)
-  const isDragging = useRef(false)
+  const draggingRef = useRef(false)
 
-  const handleMove = useCallback((clientX: number) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
+  const updatePosition = useCallback((clientX: number) => {
+    const container = containerRef.current
+    if (!container) return
+    const rect = container.getBoundingClientRect()
     const x = clientX - rect.left
     const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
     setPosition(pct)
   }, [])
 
-  const handleMouseDown = useCallback(() => { isDragging.current = true }, [])
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    draggingRef.current = true
+    updatePosition(e.clientX)
+    const target = e.currentTarget as HTMLElement
+    target.setPointerCapture(e.pointerId)
+  }, [updatePosition])
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging.current) handleMove(e.clientX)
-    }
-    const handleMouseUp = () => { isDragging.current = false }
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isDragging.current && e.touches[0]) handleMove(e.touches[0].clientX)
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    window.addEventListener('touchmove', handleTouchMove)
-    window.addEventListener('touchend', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-      window.removeEventListener('touchmove', handleTouchMove)
-      window.removeEventListener('touchend', handleMouseUp)
-    }
-  }, [handleMove])
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!draggingRef.current) return
+    e.preventDefault()
+    updatePosition(e.clientX)
+  }, [updatePosition])
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    draggingRef.current = false
+    const target = e.currentTarget as HTMLElement
+    target.releasePointerCapture(e.pointerId)
+  }, [])
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-border select-none cursor-col-resize"
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleMouseDown}
+      className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-border select-none touch-none"
+      style={{ cursor: 'col-resize' }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       {/* After (restored) image - full background */}
-      <img src={afterSrc} alt="Restored" className="absolute inset-0 w-full h-full object-contain bg-black" draggable={false} />
+      <img src={afterSrc} alt="Restored" className="absolute inset-0 w-full h-full object-contain bg-black pointer-events-none" draggable={false} />
       {/* Before (original) image - clipped */}
-      <div className="absolute inset-0 overflow-hidden" style={{ width: `${position}%` }}>
-        <img src={beforeSrc} alt="Original" className="absolute inset-0 w-full h-full object-contain bg-black" style={{ minWidth: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100%' }} draggable={false} />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ width: `${position}%` }}>
+        <img
+          src={beforeSrc}
+          alt="Original"
+          className="absolute inset-0 w-full h-full object-contain bg-black"
+          style={{ minWidth: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100%' }}
+          draggable={false}
+        />
       </div>
       {/* Divider line */}
-      <div className="absolute top-0 bottom-0 w-0.5 bg-white/80 z-10" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none"
+        style={{ left: `${position}%`, transform: 'translateX(-50%)', zIndex: 10 }}
+      >
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border-2 border-white flex items-center justify-center shadow-lg">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 3L2 8L5 13" stroke="#171717" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 3L14 8L11 13" stroke="#171717" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       </div>
       {/* Labels */}
-      <span className="absolute top-3 left-3 z-20 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm">Before</span>
-      <span className="absolute top-3 right-3 z-20 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm">After</span>
+      <span className="absolute top-3 left-3 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm pointer-events-none" style={{ zIndex: 20 }}>Before</span>
+      <span className="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium tracking-wide bg-black/60 text-white rounded-sm pointer-events-none" style={{ zIndex: 20 }}>After</span>
     </div>
   )
+}
+
+// --- Get image dimensions ---
+function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+    img.onerror = () => resolve({ width: 1, height: 1 })
+    img.src = src
+  })
 }
 
 // --- Workspace ---
@@ -106,6 +129,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
   const [status, setStatus] = useState<string>('')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [progressVal, setProgressVal] = useState(0)
+  const [imageDims, setImageDims] = useState<{ width: number; height: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Presets
@@ -132,6 +156,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
         setStatus('')
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sampleMode])
 
   const fileToDataUrl = (f: File): Promise<string> => {
@@ -155,6 +180,11 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     setFile(selectedFile)
     const objUrl = URL.createObjectURL(selectedFile)
     setOriginalPreviewUrl(objUrl)
+
+    // Get image dimensions for aspect ratio
+    const dims = await getImageDimensions(objUrl)
+    setImageDims(dims)
+
     const dataUrl = await fileToDataUrl(selectedFile)
     setOriginalDataUrl(dataUrl)
     setRestoredUrl('')
@@ -177,11 +207,22 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDropzonClick = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     const droppedFile = e.dataTransfer.files?.[0]
     if (droppedFile) handleFileSelect(droppedFile)
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
 
   const handleRestore = async () => {
     if (assetIds.length === 0 || restoring) return
@@ -190,7 +231,21 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     setProgressVal(10)
 
     const activePresets: string[] = []
-    let promptMsg = 'Analyze this uploaded photo and restore it. CRITICAL: You MUST reproduce the EXACT same scene, people, poses, background, and every visual element. Do NOT reimagine or create a new scene. Only enhance the technical quality -- improve sharpness, reduce noise, fix color fading, increase resolution to 8K clarity. The output must look like the same photograph taken with a better camera, nothing else.'
+
+    // Build aspect ratio instruction
+    let aspectInstruction = ''
+    if (imageDims && imageDims.width > 0 && imageDims.height > 0) {
+      const ratio = imageDims.width / imageDims.height
+      if (ratio > 1.3) {
+        aspectInstruction = ` The original image is landscape orientation (${imageDims.width}x${imageDims.height}). Generate the restored image in the SAME landscape aspect ratio.`
+      } else if (ratio < 0.77) {
+        aspectInstruction = ` The original image is portrait orientation (${imageDims.width}x${imageDims.height}). Generate the restored image in the SAME portrait aspect ratio.`
+      } else {
+        aspectInstruction = ` The original image is roughly square (${imageDims.width}x${imageDims.height}). Generate the restored image in the SAME square aspect ratio.`
+      }
+    }
+
+    let promptMsg = `Analyze this uploaded photo and restore it. CRITICAL: You MUST reproduce the EXACT same scene, people, poses, background, and every visual element. Do NOT reimagine or create a new scene. Only enhance the technical quality -- improve sharpness, reduce noise, fix color fading, increase resolution to 8K clarity. The output must look like the same photograph taken with a better camera, nothing else.${aspectInstruction}`
     if (sharpness) {
       promptMsg += ' Apply extra sharpness enhancement and fine detail recovery while keeping the scene identical.'
       activePresets.push('Sharpness Boost')
@@ -243,6 +298,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
             analysis: restorationAnalysis,
             date: new Date().toISOString(),
             presets: activePresets,
+            aspectRatio: imageDims ? `${imageDims.width}:${imageDims.height}` : undefined,
           }
           onSaveToHistory(entry)
         } else {
@@ -259,7 +315,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (!restoredUrl) return
     const a = document.createElement('a')
     a.href = restoredUrl
@@ -269,7 +325,20 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-  }
+  }, [restoredUrl, file])
+
+  const handleReset = useCallback(() => {
+    setFile(null)
+    setOriginalPreviewUrl('')
+    setOriginalDataUrl('')
+    setAssetIds([])
+    setRestoredUrl('')
+    setAnalysis('')
+    setStatus('')
+    setErrorMsg('')
+    setProgressVal(0)
+    setImageDims(null)
+  }, [])
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`
@@ -282,7 +351,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
   const canRestore = assetIds.length > 0 && !uploading && !restoring && !hasRestored
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8" style={{ position: 'relative', zIndex: 1 }}>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div>
@@ -294,7 +363,14 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
         {errorMsg && (
           <div className="flex items-center gap-2 p-3 rounded-sm bg-destructive/20 border border-destructive/30 text-sm text-red-300">
             <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{errorMsg}</span>
+            <span className="flex-1">{errorMsg}</span>
+            <button
+              type="button"
+              onClick={() => setErrorMsg('')}
+              className="text-red-300 hover:text-red-100 p-1"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         )}
 
@@ -323,25 +399,31 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
               <h2 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">Original Photo</h2>
               {!hasOriginal && !sampleMode ? (
                 <div
+                  role="button"
+                  tabIndex={0}
                   className="relative border-2 border-dashed border-border rounded-sm p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors hover:border-muted-foreground/50 min-h-[280px]"
-                  onDragOver={(e) => e.preventDefault()}
+                  style={{ position: 'relative', zIndex: 2 }}
+                  onDragOver={handleDragOver}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={handleDropzonClick}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDropzonClick() }}
                 >
-                  <img src="https://asset.lyzr.app/AVj15AwE" alt="Photo Restore" className="w-24 h-24 object-contain opacity-40 mb-2" />
-                  <FiUploadCloud className="w-8 h-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground text-center tracking-wide">
+                  <img src="https://asset.lyzr.app/AVj15AwE" alt="Photo Restore" className="w-24 h-24 object-contain opacity-40 mb-2 pointer-events-none" draggable={false} />
+                  <FiUploadCloud className="w-8 h-8 text-muted-foreground pointer-events-none" />
+                  <p className="text-sm text-muted-foreground text-center tracking-wide pointer-events-none">
                     Drag and drop your photo here, or click to browse
                   </p>
-                  <p className="text-xs text-muted-foreground/60">JPG, PNG, WEBP up to 20MB</p>
+                  <p className="text-xs text-muted-foreground/60 pointer-events-none">JPG, PNG, WEBP up to 20MB</p>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept=".jpg,.jpeg,.png,.webp"
-                    className="hidden"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    style={{ zIndex: 3 }}
                     onChange={(e) => {
                       const f = e.target.files?.[0]
                       if (f) handleFileSelect(f)
+                      e.target.value = ''
                     }}
                   />
                 </div>
@@ -355,30 +437,23 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
                     />
                   </div>
                   {file && !sampleMode && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-xs tracking-wide">{file.name}</Badge>
                       <Badge variant="outline" className="text-xs tracking-wide">{formatFileSize(file.size)}</Badge>
+                      {imageDims && <Badge variant="outline" className="text-xs tracking-wide">{imageDims.width}x{imageDims.height}</Badge>}
                       {uploading && <Badge variant="outline" className="text-xs text-yellow-400 tracking-wide">Uploading...</Badge>}
                       {assetIds.length > 0 && !uploading && <Badge variant="outline" className="text-xs text-green-400 tracking-wide"><FiCheck className="w-3 h-3 mr-1" />Uploaded</Badge>}
                     </div>
                   )}
                   {!sampleMode && (
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
-                      className="text-xs tracking-wide"
-                      onClick={() => {
-                        setFile(null)
-                        setOriginalPreviewUrl('')
-                        setOriginalDataUrl('')
-                        setAssetIds([])
-                        setRestoredUrl('')
-                        setAnalysis('')
-                        setStatus('')
-                        setErrorMsg('')
-                        setProgressVal(0)
-                      }}
+                      className="text-xs tracking-wide gap-1.5"
+                      onClick={handleReset}
                     >
+                      <FiRefreshCw className="w-3 h-3" />
                       Replace Photo
                     </Button>
                   )}
@@ -397,9 +472,10 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
                 <p className="text-xs text-muted-foreground tracking-wide">Enhancement presets</p>
                 <div className="flex flex-wrap gap-2">
                   <button
+                    type="button"
                     onClick={() => setSharpness(!sharpness)}
                     className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border',
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border cursor-pointer',
                       sharpness ? 'bg-foreground text-background border-foreground' : 'bg-secondary text-muted-foreground border-border hover:text-foreground'
                     )}
                   >
@@ -407,9 +483,10 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
                     Sharpness Boost
                   </button>
                   <button
+                    type="button"
                     onClick={() => setLighting(!lighting)}
                     className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border',
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border cursor-pointer',
                       lighting ? 'bg-foreground text-background border-foreground' : 'bg-secondary text-muted-foreground border-border hover:text-foreground'
                     )}
                   >
@@ -417,9 +494,10 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
                     Lighting Balance
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPortrait(!portrait)}
                     className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border',
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium tracking-wide transition-colors border cursor-pointer',
                       portrait ? 'bg-foreground text-background border-foreground' : 'bg-secondary text-muted-foreground border-border hover:text-foreground'
                     )}
                   >
@@ -446,7 +524,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
                   <div className="relative rounded-sm overflow-hidden border border-border aspect-[4/3]">
                     <img src={restoredUrl} alt="Restored" className="w-full h-full object-contain bg-black" />
                   </div>
-                  <Button onClick={handleDownload} variant="outline" size="sm" className="gap-2 text-xs tracking-wide">
+                  <Button type="button" onClick={handleDownload} variant="outline" size="sm" className="gap-2 text-xs tracking-wide">
                     <FiDownload className="w-3.5 h-3.5" />
                     Download Full Scale
                   </Button>
@@ -466,6 +544,7 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
               {/* CTA */}
               {!sampleMode && (
                 <Button
+                  type="button"
                   onClick={handleRestore}
                   disabled={!canRestore}
                   className="w-full tracking-wide"
