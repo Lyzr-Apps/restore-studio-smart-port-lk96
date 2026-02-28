@@ -34,11 +34,11 @@
   "agents": [
     {
       "node_id": "photo_restoration_agent",
-      "agent_id": "69a28d550082f39a3a37ce31",
+      "agent_id": "69a29056b465805dc60ec95b",
       "name": "Photo Restoration Agent",
       "description": "Analyzes uploaded vintage, damaged, or blurry photos, constructs a detailed restoration prompt preserving identity, pose, and composition, and generates a crystal-clear 8K restored image using the image generation tool with the original as reference input.",
-      "provider_id": "Google",
-      "model": "gemini-2.5-pro",
+      "provider_id": "OpenAI",
+      "model": "gpt-4.1",
       "temperature": 0.3,
       "top_p": 1,
       "image_output_config": {

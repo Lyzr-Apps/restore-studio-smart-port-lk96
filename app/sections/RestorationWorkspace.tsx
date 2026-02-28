@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { FiUploadCloud, FiDownload, FiImage, FiCheck, FiAlertCircle } from 'react-icons/fi'
 import { HiOutlineSparkles, HiOutlineSun, HiOutlineUser } from 'react-icons/hi2'
 
-const AGENT_ID = '69a28d550082f39a3a37ce31'
+const AGENT_ID = '69a29056b465805dc60ec95b'
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
@@ -214,8 +214,18 @@ export default function RestorationWorkspace({ onSaveToHistory, sampleMode }: Re
       setProgressVal(100)
 
       if (result.success) {
-        const restorationAnalysis = result?.response?.result?.restoration_analysis ?? ''
-        const restorationStatus = result?.response?.result?.status ?? 'completed'
+        // Check for API-level errors in the result
+        const resultData = result?.response?.result ?? {}
+        if (resultData.error) {
+          const errMsg = typeof resultData.error === 'object'
+            ? (resultData.error.message || JSON.stringify(resultData.error))
+            : String(resultData.error)
+          setErrorMsg(`Agent error: ${errMsg}`)
+          return
+        }
+
+        const restorationAnalysis = resultData.restoration_analysis ?? ''
+        const restorationStatus = resultData.status ?? 'completed'
         const artifactFiles = Array.isArray(result?.module_outputs?.artifact_files) ? result.module_outputs!.artifact_files : []
         const imageUrl = artifactFiles.length > 0 ? (artifactFiles[0]?.file_url ?? '') : ''
 

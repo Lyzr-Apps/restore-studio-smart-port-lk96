@@ -3,11 +3,11 @@
   "pattern": "single_agent",
   "agents": {
     "photo_restoration_agent": {
-      "agent_id": "69a28d550082f39a3a37ce31",
+      "agent_id": "69a29056b465805dc60ec95b",
       "name": "Photo Restoration Agent",
       "type": "image",
-      "model": "gemini-2.5-pro",
-      "provider": "Google",
+      "model": "gpt-4.1",
+      "provider": "OpenAI",
       "temperature": 0.3,
       "top_p": 1,
       "image_output_config": {

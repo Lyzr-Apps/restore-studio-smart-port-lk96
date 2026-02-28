@@ -169,7 +169,7 @@ export default function Page() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                 <span className="text-[10px] text-muted-foreground tracking-wide truncate">Image Restoration Agent</span>
               </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-1 tracking-wide">ID: 69a28d...ce31</p>
+              <p className="text-[10px] text-muted-foreground/50 mt-1 tracking-wide">ID: 69a290...c95b</p>
             </div>
           )}
         </aside>
