@@ -1,0 +1,30 @@
+{
+  "agent_name": "Photo Restoration Agent",
+  "agent_id": "69a28d550082f39a3a37ce31",
+  "description": "Analyzes uploaded vintage, damaged, or blurry photos, constructs a detailed restoration prompt preserving identity, pose, and composition, and generates a crystal-clear 8K restored image using the image generation tool with the original as reference input.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "result": {
+      "restoration_analysis": "string",
+      "restoration_prompt": "string",
+      "status": "string"
+    }
+  },
+  "example_response": {
+    "result": {
+      "restoration_analysis": "Detailed analysis of the quality issues detected in the uploaded photo, including blur, noise, fading, damage, and other degradation",
+      "restoration_prompt": "The detailed prompt constructed and used to generate the restored image",
+      "status": "Status of the restoration process - success or failure"
+    }
+  },
+  "has_module_outputs": true,
+  "module_outputs_example": {
+    "artifact_files": [
+      {
+        "file_url": "https://example.com/image.png"
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "app_name": "Photo Restore Studio",
+  "pattern": "single_agent",
+  "agents": {
+    "photo_restoration_agent": {
+      "agent_id": "69a28d550082f39a3a37ce31",
+      "name": "Photo Restoration Agent",
+      "type": "image",
+      "model": "gemini-2.5-pro",
+      "provider": "Google",
+      "temperature": 0.3,
+      "top_p": 1,
+      "image_output_config": {
+        "model": "dall-e-3",
+        "credential_id": "lyzr_openai"
+      },
+      "voice_config": null,
+      "file_output": false,
+      "has_response_schema": true,
+      "response_schema_file": "response_schemas/photo_restoration_agent_response.json",
+      "response_schema": {
+        "result": {
+          "restoration_analysis": "string",
+          "restoration_prompt": "string",
+          "status": "string"
+        }
+      },
+      "module_outputs": {
+        "artifact_files": [
+          {
+            "file_url": "string"
+          }
+        ]
+      }
+    }
+  },
+  "knowledge_bases": {},
+  "schedules": {}
+}

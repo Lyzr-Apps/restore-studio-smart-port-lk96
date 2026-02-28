@@ -1,0 +1,54 @@
+{
+  "workflow": {
+    "nodes": [
+      {
+        "id": "input_node",
+        "type": "Input",
+        "label": "Upload Photo",
+        "nodeCategory": "input"
+      },
+      {
+        "id": "photo_restoration_agent",
+        "type": "Agent",
+        "label": "Photo Restoration Agent",
+        "nodeCategory": "agent"
+      },
+      {
+        "id": "output_node",
+        "type": "Output",
+        "label": "Restored Image Output",
+        "nodeCategory": "end"
+      }
+    ],
+    "edges": [
+      {
+        "source": "input_node",
+        "target": "photo_restoration_agent"
+      },
+      {
+        "source": "photo_restoration_agent",
+        "target": "output_node"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "node_id": "photo_restoration_agent",
+      "agent_id": "69a28d550082f39a3a37ce31",
+      "name": "Photo Restoration Agent",
+      "description": "Analyzes uploaded vintage, damaged, or blurry photos, constructs a detailed restoration prompt preserving identity, pose, and composition, and generates a crystal-clear 8K restored image using the image generation tool with the original as reference input.",
+      "provider_id": "Google",
+      "model": "gemini-2.5-pro",
+      "temperature": 0.3,
+      "top_p": 1,
+      "image_output_config": {
+        "model": "dall-e-3",
+        "credential_id": "lyzr_openai"
+      },
+      "voice_config": null,
+      "file_output": false,
+      "tool_configs": [],
+      "managed_agents": []
+    }
+  ]
+}
